@@ -1,6 +1,8 @@
+#!/usr/bin/env python
 import glob
 import re
 import os
+from datetime import datetime
 from pathlib import Path
 from shutil import copyfile
 
@@ -11,9 +13,10 @@ import pandas as pd
 def clean_year(x):
     match = re.search(r"\d{4}", str(x))
     if match:
-        return int(match.group())
+        year = int(match.group())
     else:
-        return 1900
+        year = 1900
+    return year if year <= datetime.now().year else -year
 
 
 def main():
@@ -41,9 +44,9 @@ def main():
     metadatos["path"] = "tmp/drive/" + metadatos.group + "/" + metadatos.filename + ".jpg"
     metadatos[["path", "name"]].apply(lambda row: copyfile(row.path, "images/" + row["name"]), axis=1)
     # Save to disk
-    metadatos.to_csv(
-        "metadatos.csv", index=False
-    )
+    # metadatos.to_csv(
+    #     "metadatos.csv", index=False
+    # )
     # Build the new metadata csv
     csv = pd.DataFrame()
     csv["filename"] = metadatos["name"]
@@ -53,7 +56,7 @@ def main():
         + " by "
         + metadatos["creator"].astype(str)
     )
-    csv["permalink"] = metadatos["source"]
+    csv["permalink"] = metadatos["source"].fillna("")
     csv["year"] = metadatos["year"]
     csv.to_csv(
         "metadata.csv", index=False, header=False
